@@ -4,25 +4,25 @@ import sqlite3
 app = Bottle()
 
 # SQLite Database Initialization
-conn = sqlite3.connect('dogs.db')
+conn = sqlite3.connect('movies.db')
 cursor = conn.cursor()
 
-# Create dogs table
+# Create movies table
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS dogs (
-        dog_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        dog_name TEXT NOT NULL,
-        age INTEGER,
-        breed_id INTEGER,
-        FOREIGN KEY (breed_id) REFERENCES breeds(breed_id)
+    CREATE TABLE IF NOT EXISTS movies (
+        movie_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        movie_name TEXT NOT NULL,
+        year INTEGER,
+        genre_id INTEGER,
+        FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
     )
 ''')
 
-# Create breeds table
+# Create genres table
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS breeds (
-        breed_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        breed_name TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS genres (
+        genre_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        genre_name TEXT NOT NULL
     )
 ''')
 
@@ -34,101 +34,32 @@ conn.commit()
 def index():
     return template('index')
 
-# Dogs CRUD
+# Movies CRUD
 
-@app.route('/dogs')
-def dogs():
-    cursor.execute("SELECT * FROM dogs")
+@app.route('/movies')  # Changed from '/movie' to '/movies'
+def movies():
+    cursor.execute("SELECT * FROM movies")
     result = cursor.fetchall()
-    return template('dogs', rows=result)
+    return template('movies', rows=result)
 
-@app.route('/dogs/add', method='GET')
-def add_dog_form():
-    cursor.execute("SELECT * FROM breeds")
-    breeds = cursor.fetchall()
-    return template('add_dog', breeds=breeds)
+@app.route('/movies/add', method='GET')  # Changed from '/movie/add' to '/movies/add'
+def add_movie():
+    cursor.execute("SELECT * FROM genres")
+    genres = cursor.fetchall()
+    return template('add_movie', genres=genres)
 
-@app.route('/dogs/add', method='POST')
-def add_dog():
-    dog_name = request.forms.get('dog_name')
-    age = request.forms.get('age')
-    breed_id = request.forms.get('breed_id')
+@app.route('/movies/add', method='POST')  # Changed from '/movie/add' to '/movies/add'
+def add_movie():
+    movie_name = request.forms.get('movie_name')
+    year = request.forms.get('year')
+    genre_id = request.forms.get('genre_id')
 
-    cursor.execute("INSERT INTO dogs (dog_name, age, breed_id) VALUES (?, ?, ?)", (dog_name, age, breed_id))
+    cursor.execute("INSERT INTO movies (movie_name, year, genre_id) VALUES (?, ?, ?)", (movie_name, year, genre_id))
     conn.commit()
 
-    redirect('/dogs')
+    redirect('/movies')
 
-@app.route('/dogs/edit/<dog_id:int>', method='GET')
-def edit_dog_form(dog_id):
-    cursor.execute("SELECT * FROM dogs WHERE dog_id=?", (dog_id,))
-    dog = cursor.fetchone()
-
-    cursor.execute("SELECT * FROM breeds")
-    breeds = cursor.fetchall()
-
-    return template('edit_dog', dog=dog, breeds=breeds)
-
-@app.route('/dogs/edit/<dog_id:int>', method='POST')
-def edit_dog(dog_id):
-    dog_name = request.forms.get('dog_name')
-    age = request.forms.get('age')
-    breed_id = request.forms.get('breed_id')
-
-    cursor.execute("UPDATE dogs SET dog_name=?, age=?, breed_id=? WHERE dog_id=?", (dog_name, age, breed_id, dog_id))
-    conn.commit()
-
-    redirect('/dogs')
-
-@app.route('/dogs/delete/<dog_id:int>')
-def delete_dog(dog_id):
-    cursor.execute("DELETE FROM dogs WHERE dog_id=?", (dog_id,))
-    conn.commit()
-
-    redirect('/dogs')
-
-# Breeds CRUD
-
-@app.route('/breeds')
-def breeds():
-    cursor.execute("SELECT * FROM breeds")
-    result = cursor.fetchall()
-    return template('breeds', rows=result)
-
-@app.route('/breeds/add', method='GET')
-def add_breed_form():
-    return template('add_breed')
-
-@app.route('/breeds/add', method='POST')
-def add_breed():
-    breed_name = request.forms.get('breed_name')
-
-    cursor.execute("INSERT INTO breeds (breed_name) VALUES (?)", (breed_name,))
-    conn.commit()
-
-    redirect('/breeds')
-
-@app.route('/breeds/edit/<breed_id:int>', method='GET')
-def edit_breed_form(breed_id):
-    cursor.execute("SELECT * FROM breeds WHERE breed_id=?", (breed_id,))
-    breed = cursor.fetchone()
-    return template('edit_breed', breed=breed)
-
-@app.route('/breeds/edit/<breed_id:int>', method='POST')
-def edit_breed(breed_id):
-    breed_name = request.forms.get('breed_name')
-
-    cursor.execute("UPDATE breeds SET breed_name=? WHERE breed_id=?", (breed_name, breed_id))
-    conn.commit()
-
-    redirect('/breeds')
-
-@app.route('/breeds/delete/<breed_id:int>')
-def delete_breed(breed_id):
-    cursor.execute("DELETE FROM breeds WHERE breed_id=?", (breed_id,))
-    conn.commit()
-
-    redirect('/breeds')
+# ... (other movie-related routes)
 
 # Static Routes
 @app.route('/static/<filename:path>')
